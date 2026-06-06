@@ -1,5 +1,3 @@
-version: "3.9"
-
 services:
 
   postgres:
@@ -54,6 +52,11 @@ services:
       POSTGRES_DB: judge0
     volumes:
       - judge0_db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U judge0"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   judge0_redis:
     image: redis:6-alpine
@@ -70,8 +73,10 @@ services:
       - ./sandbox/judge0.conf:/judge0.conf
     privileged: true
     depends_on:
-      - judge0_db
-      - judge0_redis
+      judge0_db:
+        condition: service_healthy
+      judge0_redis:
+        condition: service_started
 
   judge0_worker:
     image: judge0/judge0:1.13.1
@@ -82,9 +87,12 @@ services:
       - ./sandbox/judge0.conf:/judge0.conf
     privileged: true
     depends_on:
-      - judge0
-      - judge0_db
-      - judge0_redis
+      judge0:
+        condition: service_started
+      judge0_db:
+        condition: service_healthy
+      judge0_redis:
+        condition: service_started
 
   backend:
     build:
@@ -143,4 +151,3 @@ volumes:
   postgres_data:
   ollama_data:
   judge0_db_data:
-  
