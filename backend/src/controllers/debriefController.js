@@ -1,6 +1,5 @@
 const { query } = require("../config/db");
 const Session = require("../models/Session");
-const { generateDebriefReport } = require("../services/interviewerService");
 
 async function generate(req, res) {
   try {
@@ -17,6 +16,7 @@ async function generate(req, res) {
     const messages = await Session.getMessages(sessionId);
     const snapshot = await Session.getLatestSnapshot(sessionId);
 
+    const { generateDebriefReport } = require("../services/interviewerService");
     let debriefData;
     try {
       debriefData = await generateDebriefReport({
