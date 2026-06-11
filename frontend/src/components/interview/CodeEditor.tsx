@@ -2,14 +2,17 @@
 import dynamic from "next/dynamic";
 import { MONACO_LANGUAGE_MAP } from "../../lib/constants";
 
-const MonacoEditor = dynamic(() => import("@monaco-editor/react"), {
-  ssr: false,
-  loading: () => (
-    <div className="flex-1 bg-bg flex items-center justify-center">
-      <span className="text-muted text-sm">Loading editor...</span>
-    </div>
-  ),
-});
+const MonacoEditor = dynamic(
+  () => import("@monaco-editor/react").then((mod) => mod.default),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="flex-1 bg-bg flex items-center justify-center">
+        <span className="text-muted text-sm">Loading editor...</span>
+      </div>
+    ),
+  }
+);
 
 interface CodeEditorProps {
   code: string;
