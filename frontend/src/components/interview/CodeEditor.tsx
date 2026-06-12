@@ -11,7 +11,7 @@ const MonacoEditor = dynamic(
         <span className="text-muted text-sm">Loading editor...</span>
       </div>
     ),
-  }
+  },
 );
 
 interface CodeEditorProps {
