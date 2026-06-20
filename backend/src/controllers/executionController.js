@@ -112,12 +112,50 @@ function checkOutput(stdout, expected) {
 
 function wrapCode(code, language, input) {
   const argsJson = JSON.stringify(Object.values(input));
+
   if (language === "javascript") {
-    return `${code}\nconst args = ${argsJson};\nconst fns = [twoSum,isValid,lengthOfLongestSubstring,levelOrder,mergeKLists].filter(f=>{try{return typeof f==='function';}catch{return false;}});\nif(fns.length>0){try{console.log(JSON.stringify(fns[0](...args)));}catch(e){console.error(e.message);}}`;
+    return `
+${code}
+
+// Auto-detect and call the last defined function
+const _args = ${argsJson};
+const _fnNames = Object.getOwnPropertyNames(global).filter(k => typeof global[k] === 'function' && !['require','setTimeout','setInterval','clearTimeout','clearInterval','setImmediate','clearImmediate','queueMicrotask','performance','clearConsole'].includes(k));
+
+// Try to find user-defined function
+let _result;
+const _lines = \`${code.replace(/`/g, "\\`")}\`.split('\\n');
+const _fnMatch = _lines.map(l => l.match(/^function\\s+(\\w+)/)).filter(Boolean);
+const _arrowMatch = _lines.map(l => l.match(/^(?:const|let|var)\\s+(\\w+)\\s*=/)).filter(Boolean);
+const _allMatches = [..._fnMatch, ..._arrowMatch].map(m => m[1]);
+
+if (_allMatches.length > 0) {
+  const _fn = eval(_allMatches[0]);
+  if (typeof _fn === 'function') {
+    _result = _fn(..._args);
+    console.log(JSON.stringify(_result));
   }
+}
+`;
+  }
+
   if (language === "python") {
-    return `${code}\nimport json\nargs=json.loads('${argsJson.replace(/'/g, "\\'")}')\nfor fn in [globals().get(f) for f in ['two_sum','is_valid','length_of_longest_substring','level_order','merge_k_lists']]:\n    if fn:\n        print(json.dumps(fn(*args)))\n        break`;
+    return `
+import json
+import re
+import sys
+
+${code}
+
+_args = json.loads('${argsJson.replace(/'/g, "\\'")}')
+_src = open(__file__).read() if hasattr(sys, 'frozen') else '''${code.replace(/'/g, "\\'")}'''
+_fns = re.findall(r'^def (\\w+)', _src, re.MULTILINE)
+if _fns:
+    _fn = locals().get(_fns[0]) or globals().get(_fns[0])
+    if _fn:
+        print(json.dumps(_fn(*_args)))
+`;
   }
+
   return code;
 }
 

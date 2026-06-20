@@ -69,8 +69,25 @@ services:
     restart: unless-stopped
     ports:
       - "2358:2358"
-    volumes:
-      - ./sandbox/judge0.conf:/judge0.conf
+    environment:
+      REDIS_HOST: judge0_redis
+      REDIS_PORT: 6379
+      POSTGRES_HOST: judge0_db
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: judge0
+      POSTGRES_USER: judge0
+      POSTGRES_PASSWORD: judge0_secret
+      RAILS_ENV: production
+      CPU_TIME_LIMIT: 5
+      CPU_EXTRA_TIME: 1
+      WALL_TIME_LIMIT: 10
+      MEMORY_LIMIT: 128000
+      STACK_LIMIT: 64000
+      MAX_PROCESSES_AND_OR_THREADS: 30
+      MAX_FILE_SIZE: 1024
+      ALLOW_ENABLE_NETWORK: "false"
+      ENABLE_BATCHED_SUBMISSIONS: "true"
+      MAX_QUEUE_SIZE: 100
     privileged: true
     depends_on:
       judge0_db:
@@ -83,8 +100,23 @@ services:
     container_name: algoforge_judge0_worker
     restart: unless-stopped
     command: ["./scripts/workers"]
-    volumes:
-      - ./sandbox/judge0.conf:/judge0.conf
+    environment:
+      REDIS_HOST: judge0_redis
+      REDIS_PORT: 6379
+      POSTGRES_HOST: judge0_db
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: judge0
+      POSTGRES_USER: judge0
+      POSTGRES_PASSWORD: judge0_secret
+      RAILS_ENV: production
+      CPU_TIME_LIMIT: 5
+      CPU_EXTRA_TIME: 1
+      WALL_TIME_LIMIT: 10
+      MEMORY_LIMIT: 128000
+      STACK_LIMIT: 64000
+      MAX_PROCESSES_AND_OR_THREADS: 30
+      MAX_FILE_SIZE: 1024
+      ALLOW_ENABLE_NETWORK: "false"
     privileged: true
     depends_on:
       judge0:
