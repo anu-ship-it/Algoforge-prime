@@ -85,16 +85,30 @@ async function runTests(req, res) {
 }
 
 async function submitToJudge0({ code, languageId, stdin }) {
+  const base64Code = Buffer.from(code).toString("base64");
+  const base64Stdin = Buffer.from(stdin || "").toString("base64");
+
   const response = await axios.post(
-    `${process.env.JUDGE0_URL}/submissions?base64_encoded=false&wait=true`,
-    { source_code: code, language_id: languageId, stdin, cpu_time_limit: 5, memory_limit: 128000 },
+    `${process.env.JUDGE0_URL}/submissions?base64_encoded=true&wait=true`,
+    {
+      source_code: base64Code,
+      language_id: languageId,
+      stdin: base64Stdin,
+      cpu_time_limit: 5,
+      memory_limit: 128000,
+    },
     { timeout: 15000 }
   );
+
   const s = response.data;
+
+  // Decode base64 outputs
+  const decode = (str) => str ? Buffer.from(str, "base64").toString("utf8") : "";
+
   return {
-    stdout: s.stdout || "",
-    stderr: s.stderr || "",
-    compile_output: s.compile_output || "",
+    stdout: decode(s.stdout),
+    stderr: decode(s.stderr),
+    compile_output: decode(s.compile_output),
     status: s.status?.description || "Unknown",
     status_id: s.status?.id,
     time: s.time,
